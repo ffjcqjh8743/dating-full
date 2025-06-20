@@ -15,3 +15,5 @@ export function validateTelegramInitData(initData: string, botToken: string): bo
 
   return hmac === hash;
 }
+// touched
+
