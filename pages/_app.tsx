@@ -1,12 +1,13 @@
-import type { AppProps } from 'next/app';
 import '../styles/globals.css';
+import type { AppProps } from 'next/app';
+import BottomNav from '@/components/BottomNav';
 
-export default function MyApp({ Component, pageProps }: AppProps) {
+export default function App({ Component, pageProps }: AppProps) {
   return (
-    <main className="bg-gray-50 min-h-screen text-gray-800">
-      <div className="max-w-xl mx-auto py-6 px-4">
-        <Component {...pageProps} />
-      </div>
-    </main>
+    <>
+      <Component {...pageProps} />
+      <BottomNav />
+    </>
   );
 }
+

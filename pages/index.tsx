@@ -1,37 +1,36 @@
 import { useEffect, useState } from 'react';
 
 export default function Home() {
-  const [error, setError] = useState<string | null>(null);
+  const [loading, setLoading] = useState(true);
+  const [hasProfile, setHasProfile] = useState(false);
 
   useEffect(() => {
     const initData = (window as any)?.Telegram?.WebApp?.initData;
-    console.log('[initData]', initData);
-
-    if (initData && initData.length > 0) {
-      fetch('/api/auth/verify', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ initData }),
-      })
-        .then((res) => {
-          if (res.ok) {
-            window.location.href = '/profile';
-          } else {
-            setError('Ошибка авторизации через Telegram.');
-          }
-        })
-        .catch(() => setError('Ошибка соединения с сервером.'));
-    } else {
-      setError('initData не передано. Открой через Telegram WebApp.');
+    if (!initData) {
+      alert('Открывайте анкету через Telegram WebApp');
+      return;
     }
+
+    fetch('/api/user/exists', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ initData }),
+    })
+      .then(res => res.json())
+      .then(data => {
+        setHasProfile(data.exists);
+        setLoading(false);
+      });
   }, []);
 
-  return (
-    <div style={{ padding: 20, color: '#fff', textAlign: 'center' }}>
-      <h1>Авторизация через Telegram</h1>
-      <p>⏳ Ожидаем передачу данных от Telegram WebApp…</p>
-      {error && <p style={{ marginTop: 20, color: 'red' }}>{error}</p>}
-    </div>
-  );
+  if (loading) return <div>Загрузка...</div>;
+
+  if (hasProfile) {
+    window.location.href = '/swipe';
+  } else {
+    window.location.href = '/register';
+  }
+
+  return null;
 }
 
