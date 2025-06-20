@@ -1,36 +1,24 @@
 import type { NextApiRequest, NextApiResponse } from 'next';
 import jwt from 'jsonwebtoken';
+import { validateTelegramInitData } from '../../../lib/validateTelegram';
 
-const TELEGRAM_BOT_TOKEN = process.env.TELEGRAM_BOT_TOKEN as string;
-
-function checkTelegramAuth(query: any): boolean {
-  const { hash, ...data } = query;
-  const checkString = Object.keys(data)
-    .sort()
-    .map((key) => `${key}=${data[key]}`)
-    .join('\n');
-
-  const secret = require('crypto')
-    .createHash('sha256')
-    .update(TELEGRAM_BOT_TOKEN)
-    .digest();
-
-  const hmac = require('crypto')
-    .createHmac('sha256', secret)
-    .update(checkString)
-    .digest('hex');
-
-  return hmac === hash;
-}
+const BOT_TOKEN = process.env.TELEGRAM_BOT_TOKEN as string;
+const JWT_SECRET = process.env.JWT_SECRET as string;
 
 export default function handler(req: NextApiRequest, res: NextApiResponse) {
-  if (!checkTelegramAuth(req.query)) {
-    return res.status(401).json({ ok: false, message: 'Unauthorized' });
+  const { initData } = req.body;
+
+  if (!validateTelegramInitData(initData, BOT_TOKEN)) {
+    return res.status(403).json({ error: 'Invalid Telegram auth' });
   }
 
-  const token = jwt.sign({ id: req.query.id, username: req.query.username }, process.env.JWT_SECRET as string, {
-    expiresIn: '30d',
+  const params = new URLSearchParams(initData);
+  const user = JSON.parse(params.get('user') || '{}');
+
+  const token = jwt.sign({ id: user.id, name: user.first_name, username: user.username }, JWT_SECRET, {
+    expiresIn: '7d',
   });
 
-  return res.status(200).json({ ok: true, token });
+  res.setHeader('Set-Cookie', `token=${token}; Path=/; HttpOnly; SameSite=Lax; Max-Age=604800`);
+  res.status(200).json({ success: true });
 }

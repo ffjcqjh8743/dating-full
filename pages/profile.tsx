@@ -1,27 +1,42 @@
-import { useState } from 'react';
-import { getZodiac } from '../utils/zodiac';
+import { GetServerSideProps } from 'next';
+import { verifyToken } from '../lib/auth';
 
-export default function Profile() {
-  const [name, setName] = useState('');
-  const [birthdate, setBirthdate] = useState('');
-  const [height, setHeight] = useState('');
-  const [bio, setBio] = useState('');
-  const [zodiac, setZodiac] = useState('');
+export const getServerSideProps: GetServerSideProps = async (ctx) => {
+  const token = ctx.req.cookies.token || '';
+  const user = verifyToken(token);
 
-  const handleDateChange = (e: any) => {
-    const date = e.target.value;
-    setBirthdate(date);
-    setZodiac(getZodiac(date));
+  if (!user) {
+    return {
+      props: {
+        user: null,
+      },
+    };
+  }
+
+  return {
+    props: {
+      user,
+    },
   };
+};
+
+export default function Profile({ user }: { user: any }) {
+  if (!user && typeof window !== 'undefined') {
+    if ((window as any).Telegram?.WebApp?.initData) {
+      fetch('/api/auth/verify', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ initData: (window as any).Telegram.WebApp.initData }),
+      }).then(() => window.location.reload());
+    }
+  }
+
+  if (!user) return <div>Авторизация через Telegram...</div>;
 
   return (
-    <div className="p-4 max-w-xl mx-auto">
-      <h1 className="text-2xl font-bold mb-4">Мой профиль</h1>
-      <input className="block mb-2 w-full p-2 border" placeholder="Имя" value={name} onChange={e => setName(e.target.value)} />
-      <input type="date" className="block mb-2 w-full p-2 border" value={birthdate} onChange={handleDateChange} />
-      <input className="block mb-2 w-full p-2 border" placeholder="Рост (см)" value={height} onChange={e => setHeight(e.target.value)} />
-      <textarea className="block mb-2 w-full p-2 border" placeholder="О себе" value={bio} onChange={e => setBio(e.target.value)} />
-      {zodiac && <p>Знак зодиака: <b>{zodiac}</b></p>}
+    <div style={{ padding: 20 }}>
+      <h1>Привет, {user.name} (@{user.username})</h1>
+      <p>ID: {user.id}</p>
     </div>
   );
 }
