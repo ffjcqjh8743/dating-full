@@ -25,12 +25,26 @@ export default function Profile({ user }: { user: any }) {
   useEffect(() => {
     if (!user && typeof window !== 'undefined') {
       const initData = (window as any)?.Telegram?.WebApp?.initData;
-      if (initData) {
+
+      console.log('⏳ Telegram initData:', initData);
+
+      if (initData && initData.length > 0) {
         fetch('/api/auth/verify', {
           method: 'POST',
           headers: { 'Content-Type': 'application/json' },
           body: JSON.stringify({ initData }),
-        }).then(() => window.location.reload());
+        })
+          .then(res => {
+            if (res.ok) {
+              console.log('✅ Auth success, reloading...');
+              window.location.reload();
+            } else {
+              console.warn('❌ Auth failed:', res.status);
+            }
+          })
+          .catch(err => console.error('⚠️ Fetch error:', err));
+      } else {
+        console.warn('⚠️ No initData detected.');
       }
     }
   }, [user]);
