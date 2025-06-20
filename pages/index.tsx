@@ -1,4 +1,4 @@
-import TelegramLoginButton from '@/components/TelegramLoginButton';
+import TelegramLoginButton from '../components/TelegramLoginButton';
 
 export default function Home() {
   return (
