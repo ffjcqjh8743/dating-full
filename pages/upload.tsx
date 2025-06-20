@@ -15,7 +15,8 @@ export default function UploadPhoto() {
     if (error) {
       alert('Ошибка загрузки: ' + error.message);
     } else {
-      const { publicURL } = supabase.storage.from('photos').getPublicUrl(`public/${file.name}`);
+      const { data: publicData } = supabase.storage.from('photos').getPublicUrl(`public/${file.name}`);
+      const publicURL = publicData.publicUrl;
       setUrl(publicURL || '');
     }
   };
@@ -29,3 +30,4 @@ export default function UploadPhoto() {
     </div>
   );
 }
+
