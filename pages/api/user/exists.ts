@@ -1,6 +1,6 @@
-import { supabase } from '../lib/supabase';
+import { supabase } from '../../../lib/supabase';
 import type { NextApiRequest, NextApiResponse } from 'next';
-import { validateTelegramInitData } from '../lib/validateTelegram';
+import { validateTelegramInitData } from '../../../lib/validateTelegram';
 
 export default async function handler(req: NextApiRequest, res: NextApiResponse) {
   if (req.method !== 'POST') return res.status(405).json({ message: 'Method not allowed' });
